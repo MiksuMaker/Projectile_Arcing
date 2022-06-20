@@ -13,12 +13,17 @@ public class Turret3D : MonoBehaviour
     [SerializeField] float projectileSpeed;
     [SerializeField] float delay = 0.1f;
     [SerializeField] float fireRate = 0.1f;
+
+    Vector3 predictedPosition;
+
     #endregion
 
     #region Builtin Methods
     private void Start()
     {
         prevPos = targetT.position;
+        predictedPosition = targetT.position;
+
         InvokeRepeating(nameof(Fire), delay, fireRate);
     }
 
@@ -27,11 +32,11 @@ public class Turret3D : MonoBehaviour
     #region Custom Methods
     public void Fire()
     {
-        Debug.Log("POSITION: " + transform.position);
+        //Debug.Log("POSITION: " + transform.position);
         var instance = Instantiate(projectile, transform.position, Quaternion.identity);
         ////  INSERT Interception
-        Debug.Log("--REAL--  Velocity: " + target.velocity);
-        Debug.Log("Simulated Velocity: " + TargetVelocity());
+        //Debug.Log("--REAL--  Velocity: " + target.velocity);
+        //Debug.Log("Simulated Velocity: " + TargetVelocity());
         if (InterceptionDirection(target.transform.position,
                                   transform.position,
                                   //target.velocity,
@@ -101,12 +106,22 @@ public class Turret3D : MonoBehaviour
         var t = dA / sB;
         var c = a + vA * t;
 
+        predictedPosition = c;  // THIS IS FOR OnDrawGizmos ONLY
+
         // INTERCEPTION DIRECTION
         result = (c - b).normalized;
         return true;
 
     }
     #endregion
+
+    // COMMENT ON/OFF
+    //
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.magenta;
+    //    Gizmos.DrawSphere(predictedPosition, 0.5f);
+    //}
 }
 
 //public class MyMath
