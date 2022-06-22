@@ -142,15 +142,14 @@ public class Attacker2 : MonoBehaviour
     private void Shoot()
     {
         GameObject arrow = Instantiate(arrowPrefab, shootingPos) as GameObject;
-
-
         
 
-        //arrow.GetComponent<Arrow3>().Launch(hitPoint, arrowSpeed, arcHeight); // ORIGINAL
+        //arrow.GetComponent<Arrow3>().Launch(hitPoint, arrowSpeed, arcHeight); // ORIGINAL v1
                                             //        //          // 5f;
-        //arrow.GetComponent<Arrow3>().Launch(predictedTargetPos, curArrowSpeed, curArcHeight);
+        //arrow.GetComponent<Arrow3>().Launch(predictedTargetPos, curArrowSpeed, curArcHeight); // v2
         arrow.GetComponent<Arrow3>().Launch(ModifyAccuracy(predictedTargetPos, distanceToTarget, 0.1f),
-                                                            curArrowSpeed, curArcHeight);
+                                                                                                       curArrowSpeed,
+                                                                                                       curArcHeight);
     }
 
     private void AdjustAim()
@@ -201,21 +200,19 @@ public class Attacker2 : MonoBehaviour
         float inaccuracy = distance / 2f * inaccuracyMod;
 
         // Randomizing the direction of inaccuracy  # feat. GAUS RANDOMIZATION #
-        float maxInaccuracy = 3f;
-        float minRange = 0f;
+        float maxInaccuracy = 5f;
+        float minRange = -maxInaccuracy; // -3f;
+        int gaussLoops = 3;
 
-        #region GAUSS Randomization
-        float xMod = (Random.Range(minRange, maxInaccuracy)
-                        + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
-                            + Random.Range(minRange, maxInaccuracy) / maxInaccuracy) - (maxInaccuracy / 2f);
+        float xMod;
+        float zMod;
 
-        float zMod = (Random.Range(minRange, maxInaccuracy)
-                        + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
-                            + Random.Range(minRange, maxInaccuracy) / maxInaccuracy) - (maxInaccuracy / 2f);
-        #endregion
+        xMod = MyRandomizer.GaussianRandomizer(minRange, maxInaccuracy, gaussLoops);
+        zMod = MyRandomizer.GaussianRandomizer(minRange, maxInaccuracy, gaussLoops);
 
         Vector3 direction = new Vector3(xMod, 0f, zMod);
-        Debug.Log("Direction: " + direction);
+        //Debug.Log("Direction: " + direction);
+        Debug.Log("X: " + xMod + " Z: " + zMod);
 
         // Calculating the final inaccuracy
         Vector3 interpretedPos = targetPos + direction * inaccuracy;
@@ -305,3 +302,41 @@ public class Attacker2 : MonoBehaviour
 
     #endregion
 }
+
+#region OBSOLETE AND OLD METHODS
+//private Vector3 ModifyAccuracy(Vector3 targetPos, float distance, float inaccuracyMod)
+//{
+//    // Getting the amount of Inaccuracy
+//    distance = distance - 10f;
+//    distance = Mathf.Max(distance, 1f);
+//    float inaccuracy = distance / 2f * inaccuracyMod;
+
+//    // Randomizing the direction of inaccuracy  # feat. GAUS RANDOMIZATION #
+//    float maxInaccuracy = 5f;
+//    float minRange = -maxInaccuracy; // -3f;
+
+//    #region GAUSS Randomization
+//    float xMod = ((Random.Range(minRange, maxInaccuracy)
+//                    + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
+//                    + Random.Range(minRange, maxInaccuracy)
+//                    + Random.Range(minRange, maxInaccuracy)
+//                        + Random.Range(minRange, maxInaccuracy)) / 5f) /*- (maxInaccuracy)*/;
+
+//    float zMod = ((Random.Range(minRange, maxInaccuracy)
+//                    + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
+//                    + Random.Range(minRange, maxInaccuracy)
+//                    + Random.Range(minRange, maxInaccuracy)
+//                        + Random.Range(minRange, maxInaccuracy)) / 5f) /*- (maxInaccuracy)*/;
+//    #endregion
+
+//    Vector3 direction = new Vector3(xMod, 0f, zMod);
+//    //Debug.Log("Direction: " + direction);
+//    Debug.Log("X: " + xMod + " Z: " + zMod);
+
+//    // Calculating the final inaccuracy
+//    Vector3 interpretedPos = targetPos + direction * inaccuracy;
+//    //Debug.Log("Distance From TargetPos: " + (interpretedPos - targetPos).magnitude);
+
+//    return interpretedPos;
+//}
+#endregion
