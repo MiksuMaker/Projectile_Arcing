@@ -5,15 +5,19 @@ using UnityEngine;
 public class Attacker2 : MonoBehaviour
 {
     #region VARIABLES
+    // TARGET
     [SerializeField] Transform targetT;
     Target targetScript;
+    Vector3 predictedTargetPos;
 
     [SerializeField] GameObject arrowPrefab;
 
 
     [Header("Projectile Stats")]
     [SerializeField] float arrowSpeed = 10f;
-    [SerializeField] float arcHeight = 5f;
+    [SerializeField] float arcHeight = 5f;  // 5f; without Modifier
+    private float curArrowSpeed;
+    private float curArcHeight;
 
     [Header("Attacker Stats")]
     [SerializeField] float attackRange = 10f;
@@ -22,10 +26,22 @@ public class Attacker2 : MonoBehaviour
 
     private float curAttackDelay = 0f;
 
+    [Header("Rotation")]
+    [SerializeField] GameObject turret;
+    [SerializeField] GameObject gun;
+
     [Header("Fire Control")]
     [SerializeField] Transform shootingPos;
     [SerializeField] bool testFire = false;
     bool firingInProcess = false;
+
+    // MODIFIERS
+    [Range(0.1f,1.5f)]
+    [SerializeField] float speedModifier = 0.1f;
+    [Range(0.1f,1.5f)]
+    [SerializeField] float heightModifier = 0.9f;
+    [Range(0.5f,4f)]
+    [SerializeField] float maxHeightModifier = 2f;
     #endregion  
 
 
@@ -39,8 +55,9 @@ public class Attacker2 : MonoBehaviour
 
     private void Update()
     {
+        HandleRotation();
+
         HandleShooting();
-        
 
         HandleTimeScale();
     }
@@ -80,6 +97,7 @@ public class Attacker2 : MonoBehaviour
         }
     }
 
+    #region SHOOTING
     private void HandleShooting()
     {
         // IF firing, start and keep up coroutine
@@ -105,7 +123,7 @@ public class Attacker2 : MonoBehaviour
 
     IEnumerator Firing_Coroutine()
     {
-        while (true)
+        while (true && testFire)
         {
             // SHOOT
             Shoot();
@@ -115,22 +133,52 @@ public class Attacker2 : MonoBehaviour
         }
     }
 
-    //private void Shoot()
-    //{
-    //    GameObject arrow = Instantiate(arrowPrefab, shootingPos) as GameObject;
-
-    //    arrow.GetComponent<Arrow3>().Launch(targetT.position, 10f, 5f);
-    //}
 
     private void Shoot()
     {
         GameObject arrow = Instantiate(arrowPrefab, shootingPos) as GameObject;
 
+
+        // ADJUST FIRE
+
+        // Get Distance
+        float distance = (transform.position - targetT.position).magnitude;
+
+        // Adjust the CURRENT SPEED and ARC-HEIGHT according to Magnitude
+
+        // HEIGHT
+        //curArcHeight = arcHeight - (distance * heightModifier);   // v1
+        curArcHeight = arcHeight - (distance * heightModifier) + (distance * heightModifier * heightModifier / 2f);
+        curArcHeight = Mathf.Max(maxHeightModifier, curArcHeight);  // Capping the Height
+        Debug.Log("Height: " + curArcHeight);
+        
+        // SPEED
+        //curArrowSpeed = arrowSpeed + (distance * speedModifier);  // v1
+        //curArrowSpeed = (arrowSpeed + distance) / 2f;             // v2
+        curArrowSpeed = (arrowSpeed + distance - (curArcHeight * 0.5f)) / 2f;   // v3
+
+
+
+
         float time = 0f;
-        Vector3 hitPoint = GetHitPoint(targetT.position, targetScript.velocity, transform.position, arrowSpeed, out time);
+        //Vector3 hitPoint = GetHitPoint(targetT.position,        // ORIGINAL
+        //                               targetScript.velocity,
+        //                               transform.position,
+        //                               arrowSpeed,
+        //                               out time);
 
+        Vector3 hitPoint = GetHitPoint(targetT.position,        // ADJUSTED
+                                       targetScript.velocity,
+                                       transform.position,
+                                       curArrowSpeed,
+                                       out time);
 
-        arrow.GetComponent<Arrow3>().Launch(hitPoint, arrowSpeed, arcHeight);
+        // This is for Cannon Rotation
+        predictedTargetPos = hitPoint;
+
+        //arrow.GetComponent<Arrow3>().Launch(hitPoint, arrowSpeed, arcHeight); // ORIGINAL
+                                            //        //          // 5f;
+        arrow.GetComponent<Arrow3>().Launch(hitPoint, curArrowSpeed, curArcHeight);
     }
 
     private Vector3 GetHitPoint(Vector3 targetPos, Vector3 targetVelocity, Vector3 attackerPos, float bulletSpeed, out float time)
@@ -159,5 +207,31 @@ public class Attacker2 : MonoBehaviour
         Vector3 ret = targetPos + targetVelocity * time;
         return ret;
     }
+    #endregion
+
+
+    #region ROTATION
+    private void HandleRotation()
+    {
+        RotateTurret();
+        PitchTurretGun();
+    }
+
+    private void RotateTurret()
+    {
+        // Point the turret into correct direction
+        Vector3 pointDirection = predictedTargetPos - transform.position;
+        Vector3 newDirection = Vector3.Lerp(turret.transform.forward, pointDirection, 0.1f * Time.deltaTime);
+
+        turret.transform.rotation = Quaternion.LookRotation(newDirection);
+    }
+
+    private void PitchTurretGun()
+    {
+
+    }
+    #endregion
+
+
     #endregion
 }

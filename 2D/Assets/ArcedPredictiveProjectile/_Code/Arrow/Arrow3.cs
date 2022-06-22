@@ -30,6 +30,7 @@ public class Arrow3 : MonoBehaviour
     private void Start()
     {
         startPos = transform.position;
+        timeElapsed = 0f;
 
         //Time.timeScale = 0.2f;
     }
@@ -41,7 +42,14 @@ public class Arrow3 : MonoBehaviour
             Move();
         }
 
-        timeElapsed = +1f / Time.deltaTime;
+        timeElapsed += 1f * Time.deltaTime;
+    }
+
+    private void Update()
+    {
+        //timeElapsed += Time.deltaTime;
+        //Debug.Log("COUNTING!");
+        
     }
     #endregion
 
@@ -79,7 +87,7 @@ public class Arrow3 : MonoBehaviour
 
         Vector3 nextPos = new Vector3(nextGroundPos.x, baseY + arc, nextGroundPos.z);
 
-        Debug.Log("Velocity: " + (transform.position - nextPos).magnitude / Time.deltaTime);
+        //Debug.Log("Velocity: " + (transform.position - nextPos).magnitude / Time.deltaTime);
 
         // Rotate to face the next Position
         transform.LookAt(nextPos);
