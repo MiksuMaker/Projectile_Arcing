@@ -98,6 +98,9 @@ public class Arrow3 : MonoBehaviour
         {
             // Collides with something
             Arrived();
+
+            // Stick to the Object
+            transform.parent = Physics.OverlapSphere(transform.position, 0.1f, collidableLayers)[0].gameObject.transform;
         }
 
 
@@ -110,7 +113,7 @@ public class Arrow3 : MonoBehaviour
     private void Arrived()
     {
         hasArrived = true;
-        Debug.Log("Total Time Elapsed: " + timeElapsed);
+        //Debug.Log("Total Time Elapsed: " + timeElapsed);
         //Debug.Log("Projectile has landed at: " + transform.position);
     }
     #endregion

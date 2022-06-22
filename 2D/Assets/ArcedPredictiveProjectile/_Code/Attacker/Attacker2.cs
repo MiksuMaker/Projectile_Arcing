@@ -9,6 +9,7 @@ public class Attacker2 : MonoBehaviour
     [SerializeField] Transform targetT;
     Target targetScript;
     Vector3 predictedTargetPos;
+    float distanceToTarget;
 
     [SerializeField] GameObject arrowPrefab;
 
@@ -42,6 +43,8 @@ public class Attacker2 : MonoBehaviour
     [SerializeField] float heightModifier = 0.9f;
     [Range(0.5f,4f)]
     [SerializeField] float maxHeightModifier = 2f;
+    [Range(-90f, -80f)]
+    [SerializeField] float pitchModifier = 2f;
     #endregion  
 
 
@@ -55,6 +58,8 @@ public class Attacker2 : MonoBehaviour
 
     private void Update()
     {
+        AdjustAim();
+
         HandleRotation();
 
         HandleShooting();
@@ -139,10 +144,21 @@ public class Attacker2 : MonoBehaviour
         GameObject arrow = Instantiate(arrowPrefab, shootingPos) as GameObject;
 
 
+        
+
+        //arrow.GetComponent<Arrow3>().Launch(hitPoint, arrowSpeed, arcHeight); // ORIGINAL
+                                            //        //          // 5f;
+        //arrow.GetComponent<Arrow3>().Launch(predictedTargetPos, curArrowSpeed, curArcHeight);
+        arrow.GetComponent<Arrow3>().Launch(ModifyAccuracy(predictedTargetPos, distanceToTarget, 0.1f),
+                                                            curArrowSpeed, curArcHeight);
+    }
+
+    private void AdjustAim()
+    {
         // ADJUST FIRE
 
         // Get Distance
-        float distance = (transform.position - targetT.position).magnitude;
+        float distance = (transform.position - targetT.position).magnitude;     distanceToTarget = distance;
 
         // Adjust the CURRENT SPEED and ARC-HEIGHT according to Magnitude
 
@@ -150,8 +166,8 @@ public class Attacker2 : MonoBehaviour
         //curArcHeight = arcHeight - (distance * heightModifier);   // v1
         curArcHeight = arcHeight - (distance * heightModifier) + (distance * heightModifier * heightModifier / 2f);
         curArcHeight = Mathf.Max(maxHeightModifier, curArcHeight);  // Capping the Height
-        Debug.Log("Height: " + curArcHeight);
-        
+                                                                    //Debug.Log("Height: " + curArcHeight);
+
         // SPEED
         //curArrowSpeed = arrowSpeed + (distance * speedModifier);  // v1
         //curArrowSpeed = (arrowSpeed + distance) / 2f;             // v2
@@ -175,10 +191,37 @@ public class Attacker2 : MonoBehaviour
 
         // This is for Cannon Rotation
         predictedTargetPos = hitPoint;
+    }
 
-        //arrow.GetComponent<Arrow3>().Launch(hitPoint, arrowSpeed, arcHeight); // ORIGINAL
-                                            //        //          // 5f;
-        arrow.GetComponent<Arrow3>().Launch(hitPoint, curArrowSpeed, curArcHeight);
+    private Vector3 ModifyAccuracy(Vector3 targetPos, float distance, float inaccuracyMod)
+    {
+        // Getting the amount of Inaccuracy
+        distance = distance - 10f;
+        distance = Mathf.Max(distance, 1f);
+        float inaccuracy = distance / 2f * inaccuracyMod;
+
+        // Randomizing the direction of inaccuracy  # feat. GAUS RANDOMIZATION #
+        float maxInaccuracy = 3f;
+        float minRange = 0f;
+
+        #region GAUSS Randomization
+        float xMod = (Random.Range(minRange, maxInaccuracy)
+                        + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
+                            + Random.Range(minRange, maxInaccuracy) / maxInaccuracy) - (maxInaccuracy / 2f);
+
+        float zMod = (Random.Range(minRange, maxInaccuracy)
+                        + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
+                            + Random.Range(minRange, maxInaccuracy) / maxInaccuracy) - (maxInaccuracy / 2f);
+        #endregion
+
+        Vector3 direction = new Vector3(xMod, 0f, zMod);
+        Debug.Log("Direction: " + direction);
+
+        // Calculating the final inaccuracy
+        Vector3 interpretedPos = targetPos + direction * inaccuracy;
+        //Debug.Log("Distance From TargetPos: " + (interpretedPos - targetPos).magnitude);
+
+        return interpretedPos;
     }
 
     private Vector3 GetHitPoint(Vector3 targetPos, Vector3 targetVelocity, Vector3 attackerPos, float bulletSpeed, out float time)
@@ -228,7 +271,34 @@ public class Attacker2 : MonoBehaviour
 
     private void PitchTurretGun()
     {
+        // Get the Distance between Turret & Target
+        float distance = (transform.position - predictedTargetPos).magnitude;
 
+        // Calculate the PITCH
+        float calculationRotation = (distance - 10f) * 2f;
+
+        // MAX Rotation - calculationRotation
+        float reversedRotation = /*65f -*/ calculationRotation;
+
+        //float desiredRotation = calculationRotation + 10f; // v1
+        float desiredRotation = reversedRotation + 10f + pitchModifier;
+
+        // CLAMP IT
+        desiredRotation = (desiredRotation > 180) ? desiredRotation - 360f : desiredRotation;
+        desiredRotation = Mathf.Clamp(desiredRotation, -90f, -1f);
+
+        //Debug.Log("Desired Rotation: " + desiredRotation);
+
+
+        // PITCH the Gun
+        Vector3 pitch = new Vector3(desiredRotation, //desiredRotation
+                                    gun.transform.eulerAngles.y,
+                                    gun.transform.eulerAngles.z);
+
+        Quaternion qPitch = Quaternion.Euler(pitch);
+
+        // Smooth Rotation and ROTATE
+        gun.transform.rotation = Quaternion.Lerp(gun.transform.rotation, qPitch, 1f * Time.deltaTime);
     }
     #endregion
 
