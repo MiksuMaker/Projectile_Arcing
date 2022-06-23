@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// ATTACKER 2 shoots like a MORTAR, with a high arc up-close and lower when further away
-public class Attacker2 : MonoBehaviour
+// ATTACKER 3 shoots like a TANK, with low-arced shots all the way
+public class Attacker3 : MonoBehaviour
 {
     #region VARIABLES
     // TARGET
@@ -39,13 +39,13 @@ public class Attacker2 : MonoBehaviour
 
     // MODIFIERS
     [Header("Modifiers")]
-    [Range(0.1f,1.5f)]
+    [Range(0.1f, 1.5f)]
     [SerializeField] float speedModifier = 0.1f;
-    [Range(0.1f,1.5f)]
+    [Range(0.1f, 1.5f)]
     [SerializeField] float heightModifier = 0.9f;
-    [Range(0.5f,4f)]
+    [Range(0.5f, 4f)]
     [SerializeField] float maxHeightModifier = 2f;
-    [Range(-90f, -80f)]
+    [Range(-90f, 0f)]
     [SerializeField] float pitchModifier = 2f;
     [Space]
     [Range(0f, 10f)]
@@ -150,10 +150,10 @@ public class Attacker2 : MonoBehaviour
     private void Shoot()
     {
         GameObject arrow = Instantiate(arrowPrefab, shootingPos.position, gun.transform.rotation) as GameObject;
-        
+
 
         //arrow.GetComponent<Arrow3>().Launch(hitPoint, arrowSpeed, arcHeight); // ORIGINAL v1
-                                            //        //          // 5f;
+        //        //          // 5f;
         //arrow.GetComponent<Arrow3>().Launch(predictedTargetPos, curArrowSpeed, curArcHeight); // v2
         arrow.GetComponent<Arrow3>().Launch(ModifyAccuracy(predictedTargetPos, distanceToTarget, 0.1f),
                                                                                                        curArrowSpeed,
@@ -166,10 +166,10 @@ public class Attacker2 : MonoBehaviour
         // ADJUST FIRE
 
         // Get Distance
-        float distance = (transform.position - targetT.position).magnitude;     distanceToTarget = distance;
+        float distance = (transform.position - targetT.position).magnitude;         distanceToTarget = distance;
 
         // Adjust the CURRENT SPEED and ARC-HEIGHT according to Magnitude
-
+        #region MORTAR STYLE
         // HEIGHT
         //curArcHeight = arcHeight - (distance * heightModifier);   // v1
         curArcHeight = arcHeight - (distance * heightModifier) + (distance * heightModifier * heightModifier / 2f);
@@ -180,8 +180,7 @@ public class Attacker2 : MonoBehaviour
         //curArrowSpeed = arrowSpeed + (distance * speedModifier);  // v1
         //curArrowSpeed = (arrowSpeed + distance) / 2f;             // v2
         curArrowSpeed = (arrowSpeed + distance - (curArcHeight * 0.5f)) / 2f;   // v3
-
-
+        #endregion
 
 
         float time = 0f;
@@ -203,6 +202,8 @@ public class Attacker2 : MonoBehaviour
 
     private Vector3 ModifyAccuracy(Vector3 targetPos, float distance, float inaccuracyMod)
     {
+        // TANK VERSION
+
         // Getting the amount of Inaccuracy
         distance = distance - 10f;
         distance = Mathf.Max(distance, 1f);
@@ -226,6 +227,8 @@ public class Attacker2 : MonoBehaviour
         // Calculating the final inaccuracy
         Vector3 interpretedPos = targetPos + direction * inaccuracy;
         //Debug.Log("Distance From TargetPos: " + (interpretedPos - targetPos).magnitude);
+
+        //interpretedPos = AddFurtherDistance(interpretedPos, distance, 1f);
 
         return interpretedPos;
     }
@@ -312,41 +315,3 @@ public class Attacker2 : MonoBehaviour
 
     #endregion
 }
-
-#region OBSOLETE AND OLD METHODS
-//private Vector3 ModifyAccuracy(Vector3 targetPos, float distance, float inaccuracyMod)
-//{
-//    // Getting the amount of Inaccuracy
-//    distance = distance - 10f;
-//    distance = Mathf.Max(distance, 1f);
-//    float inaccuracy = distance / 2f * inaccuracyMod;
-
-//    // Randomizing the direction of inaccuracy  # feat. GAUS RANDOMIZATION #
-//    float maxInaccuracy = 5f;
-//    float minRange = -maxInaccuracy; // -3f;
-
-//    #region GAUSS Randomization
-//    float xMod = ((Random.Range(minRange, maxInaccuracy)
-//                    + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
-//                    + Random.Range(minRange, maxInaccuracy)
-//                    + Random.Range(minRange, maxInaccuracy)
-//                        + Random.Range(minRange, maxInaccuracy)) / 5f) /*- (maxInaccuracy)*/;
-
-//    float zMod = ((Random.Range(minRange, maxInaccuracy)
-//                    + Random.Range(minRange, maxInaccuracy)                       // Center it at ZERO
-//                    + Random.Range(minRange, maxInaccuracy)
-//                    + Random.Range(minRange, maxInaccuracy)
-//                        + Random.Range(minRange, maxInaccuracy)) / 5f) /*- (maxInaccuracy)*/;
-//    #endregion
-
-//    Vector3 direction = new Vector3(xMod, 0f, zMod);
-//    //Debug.Log("Direction: " + direction);
-//    Debug.Log("X: " + xMod + " Z: " + zMod);
-
-//    // Calculating the final inaccuracy
-//    Vector3 interpretedPos = targetPos + direction * inaccuracy;
-//    //Debug.Log("Distance From TargetPos: " + (interpretedPos - targetPos).magnitude);
-
-//    return interpretedPos;
-//}
-#endregion
