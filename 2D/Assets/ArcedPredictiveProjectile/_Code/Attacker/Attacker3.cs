@@ -9,7 +9,7 @@ public class Attacker3 : MonoBehaviour
     // TARGET
     [SerializeField] Transform targetT;
     Target targetScript;
-    Vector3 predictedTargetPos;
+    public Vector3 predictedTargetPos;
     float distanceToTarget;
 
     [SerializeField] GameObject arrowPrefab;
@@ -22,7 +22,7 @@ public class Attacker3 : MonoBehaviour
     private float curArcHeight;
 
     [Header("Attacker Stats")]
-    [SerializeField] float attackRange = 10f;
+    //[SerializeField] float attackRange = 10f; // in MoveAttacker -Stub
     [SerializeField] float attackDelay = 2f;
     [SerializeField] float gravity = -Physics.gravity.y;
 
@@ -36,6 +36,7 @@ public class Attacker3 : MonoBehaviour
     [SerializeField] Transform shootingPos;
     [SerializeField] bool testFire = false;
     bool firingInProcess = false;
+    public bool allowedToShoot = false; // STUB
 
     // MODIFIERS
     [Header("Modifiers")]
@@ -74,11 +75,6 @@ public class Attacker3 : MonoBehaviour
 
         HandleTimeScale();
     }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-    }
     #endregion
 
     #region CUSTOM
@@ -114,7 +110,7 @@ public class Attacker3 : MonoBehaviour
     private void HandleShooting()
     {
         // IF firing, start and keep up coroutine
-        if (testFire)
+        if (testFire && allowedToShoot)
         {
             if (!firingInProcess)
             {
@@ -136,7 +132,8 @@ public class Attacker3 : MonoBehaviour
 
     IEnumerator Firing_Coroutine()
     {
-        while (true && testFire)
+        //while (true && testFire) // ORIGINAL
+        while (true && testFire && allowedToShoot)
         {
             // SHOOT
             Shoot();
@@ -296,8 +293,6 @@ public class Attacker3 : MonoBehaviour
         // CLAMP IT
         desiredRotation = (desiredRotation > 180) ? desiredRotation - 360f : desiredRotation;
         desiredRotation = Mathf.Clamp(desiredRotation, -90f, -1f);
-
-        //Debug.Log("Desired Rotation: " + desiredRotation);
 
 
         // PITCH the Gun
